@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>PinBook</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body class="popup">
+
+  <div class="page-wrap">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-pin">📌</span>
+        <h1>PinBook</h1>
+      </div>
+      <div class="topbar-actions">
+        <button id="btnSaveTab" class="btn btn-ghost" title="Lưu tab đang mở">+ Tab này</button>
+        <button id="btnAdd" class="btn btn-primary" title="Thêm bookmark mới">+ Thêm</button>
+        <div class="menu-wrap">
+          <button id="btnMenu" class="icon-btn" title="Thêm tùy chọn">⋯</button>
+          <div id="menuDropdown" class="dropdown-menu" hidden>
+            <button id="menuExpand" class="dropdown-item" type="button">⛶ Mở rộng cửa sổ</button>
+            <button id="menuImport" class="dropdown-item" type="button">⬆ Nhập bookmark (.html)</button>
+            <button id="menuExport" class="dropdown-item" type="button">⬇ Xuất bookmark (.html)</button>
+            <button id="menuImportJson" class="dropdown-item" type="button">⬆ Nhập bookmark kèm ảnh Preview</button>
+            <button id="menuExportJson" class="dropdown-item" type="button">⬇ Xuất bookmark kèm ảnh Preview</button>
+            <button id="menuShortcuts" class="dropdown-item" type="button">⌨ Phím tắt</button>
+          </div>
+        </div>
+        <input id="importFileInput" type="file" accept=".html,text/html" hidden />
+        <input id="importJsonFileInput" type="file" accept=".json,application/json" hidden />
+      </div>
+    </header>
+
+    <div class="searchbar">
+      <input id="searchInput" type="text" placeholder="Tìm bookmark hoặc thư mục…" autocomplete="off" />
+      <label class="filter-toggle" title="Chỉ hiện bookmark có ảnh preview (thư mục vẫn hiện bình thường)">
+        <input type="checkbox" id="filterHasImage" />
+        <span>Ảnh Preview</span>
+      </label>
+      <label class="filter-toggle" title="Chỉ hiện bookmark không có ảnh preview (thư mục vẫn hiện bình thường)">
+        <input type="checkbox" id="filterNoImage" />
+        <span>Không Preview</span>
+      </label>
+    </div>
+
+    <div class="search-modes" id="searchModesRow">
+      <span class="search-modes-label">Search mode:</span>
+      <!-- pills rendered by app.js from SEARCH_MODES -->
+    </div>
+
+    <div class="explorer">
+      <aside id="sidebar" class="sidebar">
+        <!-- folder tree renders here -->
+      </aside>
+
+      <main id="listView" class="list-view">
+        <div class="list-view-header">
+          <div id="listBreadcrumb" class="list-breadcrumb"></div>
+          <div class="view-toggle" role="group" aria-label="Chuyển kiểu hiển thị">
+            <button id="viewListBtn" type="button" class="view-toggle-btn" title="Danh sách">☰</button>
+            <button id="viewGridBtn" type="button" class="view-toggle-btn" title="Lưới">▦</button>
+          </div>
+        </div>
+        <div id="listItems" class="list-items"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add / Edit modal -->
+  <div id="modalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Thêm bookmark</h2>
+        <button id="btnCloseModal" class="icon-btn" title="Đóng">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="field-label" for="fieldTitle">Tên</label>
+        <input id="fieldTitle" type="text" placeholder="Ví dụ: Bài viết hay về..." />
+
+        <label class="field-label" for="fieldUrl">Đường dẫn (URL)</label>
+        <input id="fieldUrl" type="text" placeholder="https://..." />
+
+        <label class="field-label" for="fieldFolder">Thư mục</label>
+        <select id="fieldFolder">
+          <option value="">Chưa phân loại</option>
+        </select>
+
+        <label class="field-label">Ảnh preview</label>
+        <div class="image-source-tabs">
+          <button type="button" class="src-tab active" data-src="upload">Tải ảnh lên</button>
+          <button type="button" class="src-tab" data-src="capture">Chụp tab hiện tại</button>
+          <button type="button" class="src-tab" data-src="url">Dán link ảnh</button>
+        </div>
+
+        <div id="srcUpload" class="src-panel">
+          <input id="fileInput" type="file" accept="image/*" />
+        </div>
+        <div id="srcCapture" class="src-panel" hidden>
+          <button id="btnCapture" type="button" class="btn btn-secondary">📷 Chụp màn hình tab đang mở</button>
+          <p class="hint">Chụp đúng những gì bạn đang thấy trên tab hiện tại.</p>
+        </div>
+        <div id="srcUrl" class="src-panel" hidden>
+          <div class="inline-row">
+            <input id="imageUrlInput" type="text" placeholder="https://.../anh.jpg" />
+            <button id="btnFetchImageUrl" type="button" class="btn btn-secondary">Lấy ảnh</button>
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <img id="imagePreview" alt="Xem trước ảnh" hidden />
+          <div id="imagePreviewEmpty" class="preview-empty">Chưa có ảnh nào được chọn</div>
+          <button id="btnRemoveImage" type="button" class="preview-remove-btn" title="Xóa ảnh preview" hidden>🗑 Xóa ảnh</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnCancel" class="btn btn-ghost">Hủy</button>
+        <button id="btnSave" class="btn btn-primary">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="multiSelectBanner" class="multiselect-banner" hidden>Đã chọn <span id="multiSelectCount">0</span> mục</div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <div id="undoToast" class="undo-toast" hidden>
+    <span id="undoToastMessage"></span>
+    <button id="undoToastBtn" class="undo-toast-btn" type="button">Hoàn tác</button>
+    <button id="undoToastClose" class="undo-toast-close" type="button" title="Đóng">✕</button>
+  </div>
+
+  <div id="hoverPreview" class="hover-preview">
+    <img id="hoverPreviewImg" alt="" />
+  </div>
+
+  <div id="contextMenu" class="dropdown-menu context-menu" hidden>
+    <button id="ctxAddBookmark" class="dropdown-item" type="button">+ Thêm bookmark mới</button>
+    <button id="ctxAddFolder" class="dropdown-item" type="button">+ Thêm thư mục mới</button>
+  </div>
+
+  <div id="itemMenu" class="dropdown-menu context-menu" hidden>
+    <button id="itemMenuEdit" class="dropdown-item" type="button">✎ Chỉnh sửa</button>
+    <button id="itemMenuShowInFolder" class="dropdown-item" type="button" hidden>📂 Hiển thị trong thư mục</button>
+    <button id="itemMenuDelete" class="dropdown-item" type="button">🗑 Xóa</button>
+    <div class="dropdown-sep"></div>
+    <button id="itemMenuCut" class="dropdown-item" type="button">✂ Cắt</button>
+    <button id="itemMenuCopy" class="dropdown-item" type="button">⧉ Sao chép</button>
+    <button id="itemMenuPaste" class="dropdown-item" type="button">📋 Dán</button>
+  </div>
+
+  <div id="folderModalOverlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="folderModalTitle">Đổi tên thư mục</h2>
+        <button id="btnCloseFolderModal" class="icon-btn" title="Đóng">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="folderNameInput">Tên thư mục</label>
+        <input id="folderNameInput" type="text" placeholder="Tên thư mục..." />
+      </div>
+      <div class="modal-footer">
+        <button id="btnFolderModalCancel" class="btn btn-ghost">Hủy</button>
+        <button id="btnFolderModalSave" class="btn btn-primary">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shortcutsOverlay" class="modal-overlay" hidden>
+    <div class="modal shortcuts-modal">
+      <div class="modal-header">
+        <h2>Phím tắt trong PinBook</h2>
+        <button id="btnCloseShortcuts" class="icon-btn" title="Đóng">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="shortcuts-group-label">Toàn cục (bấm được ở bất kỳ tab nào, không cần mở PinBook)</p>
+        <table class="shortcuts-table">
+          <tr><td>Lưu nhanh tab đang mở vào "Chưa phân loại"</td><td><kbd>Ctrl+Shift+Y</kbd></td></tr>
+          <tr><td>Mở PinBook ở chế độ Toàn màn hình</td><td><kbd>Ctrl+Shift+F</kbd></td></tr>
+        </table>
+
+        <p class="shortcuts-group-label">Trong cửa sổ PinBook — áp dụng cho mục Bookmark/Thư mục đang được chọn</p>
+        <table class="shortcuts-table">
+          <tr><td>Chỉnh sửa</td><td><kbd>Ctrl+Q</kbd></td></tr>
+          <tr><td>Xóa</td><td><kbd>Delete</kbd></td></tr>
+          <tr><td>Cắt</td><td><kbd>Ctrl+X</kbd></td></tr>
+          <tr><td>Sao chép</td><td><kbd>Ctrl+C</kbd></td></tr>
+          <tr><td>Dán (mục đã Cắt/Sao chép, vào thư mục đang xem)</td><td><kbd>Ctrl+V</kbd></td></tr>
+          <tr><td>Hoàn tác hành động gần nhất (Xóa / Kéo-thả / Cắt-Dán / Sao chép-Dán)</td><td><kbd>Ctrl+Z</kbd></td></tr>
+          <tr><td>Mở mục đang chọn (thư mục thì vào trong, bookmark thì mở tab mới — chọn nhiều thì mở hết bookmark, mỗi cái 1 tab)</td><td><kbd>Enter</kbd></td></tr>
+          <tr><td>Chuyển sang chọn mục liền trước / liền sau</td><td><kbd>↑</kbd> / <kbd>↓</kbd></td></tr>
+          <tr><td>Chọn tất cả mục trong thư mục đang mở (chỉ ở Toàn màn hình)</td><td><kbd>Ctrl+A</kbd></td></tr>
+        </table>
+
+        <p class="shortcuts-group-label">Khác</p>
+        <table class="shortcuts-table">
+          <tr><td>Chọn nhiều mục liền nhau (từ mục vừa bấm trước đó đến mục này)</td><td>Shift+Click</td></tr>
+          <tr><td>Chọn thêm/bớt từng mục rời rạc (không liền kề)</td><td>Ctrl+Click</td></tr>
+          <tr><td>Lưu nhanh link từ khay nhớ tạm</td><td><kbd>Ctrl+Shift+K</kbd></td></tr>
+          <tr><td>Kéo-thả để sắp xếp lại vị trí (chế độ Toàn màn hình, kiểu Danh sách)</td><td>Kéo chuột</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

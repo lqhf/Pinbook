@@ -1,0 +1,8 @@
+@import url("style-shared.css");
+
+/* ---------- Popup-specific sizing ---------- */
+html, body {
+  width: 440px;
+  max-height: 580px;
+  overflow: hidden;
+}

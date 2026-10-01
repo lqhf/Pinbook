@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "PinBook – QHxWEN",
+  "version": "3.7.0",
+  "description": "Tăng cỡ chữ toàn bộ breadcrumb ở khung phải (Tất cả / Chưa phân loại / tên thư mục / Kết quả tìm kiếm cho…).",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PinBook",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "quick-save-unfiled": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Lưu nhanh tab hiện tại vào \"Chưa phân loại\""
+    },
+    "open-fullview": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Mở PinBook ở chế độ Toàn màn hình"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ]
+}
